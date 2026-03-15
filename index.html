@@ -3,6 +3,7 @@
 <head>
     <title>Water System Operational Diagram</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <link rel="icon" href="data:,">
     <style>
         #cy {
             width: 100%;
@@ -74,23 +75,29 @@
     });
 
     // 3. Fetch Data from Google Sheets
-    async function refreshData() {
-        document.getElementById('status').innerText = "Updating...";
-        try {
-            const response = await fetch('https://script.google.com/macros/s/AKfycby4z__iSQeyEzxUGvJCr1Gedk7p7pgxNDM4shX-cFXe966_OJlbiNE0JCzHXUZa7NNkHg/exec');
-            const data = await response.json();
+        async function refreshData() {
+            const url = 'https://script.google.com/macros/s/AKfycby4z__iSQeyEzxUGvJCr1Gedk7p7pgxNDM4shX-cFXe966_OJlbiNE0JCzHXUZa7NNkHg/exec'; 
+            try {
+                // 'follow' tells the browser to chase the Google redirect
+                const response = await fetch(url, { redirect: 'follow' });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                console.log("Data received:", data); // Check your console to see the rows!
 
-            data.forEach(item => {
-                const node = cy.getElementById(item.id);
-                if (node.length > 0) {
-                    node.data('state', item.state); // Triggers the style change
-                }
-            });
-            document.getElementById('status').innerText = "Last sync: " + new Date().toLocaleTimeString();
-        } catch (err) {
-            document.getElementById('status').innerText = "Error fetching data.";
+                data.forEach(item => {
+                    // Important: Apps Script converts headers to lowercase in our script
+                    // If your column was "ID", use item.id. If "State", use item.state.
+                    const node = cy.getElementById(item.id);
+                    if (node.length > 0) {
+                        node.data('state', item.state.toUpperCase()); 
+                    }
+                });
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
         }
-    }
 
     // Auto-refresh every 60 seconds
     setInterval(refreshData, 60000);
