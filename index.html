@@ -8,7 +8,6 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background: #f0f4f8; }
-
         .header {
             background: #1a252f;
             color: white;
@@ -19,7 +18,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
         .header h1 { font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; }
-
         #sync-status {
             font-size: 0.75rem;
             padding: 4px 12px;
@@ -27,9 +25,7 @@
             background: #34495e;
             transition: background 0.4s;
         }
-
         #cy { width: 100vw; height: calc(100vh - 50px); display: block; }
-
         .legend {
             position: absolute;
             bottom: 20px;
@@ -63,23 +59,23 @@
     <div class="legend-item"><div class="dot-square" style="background:#3498db"></div> Zone ACTIVE</div>
     <div class="legend-item"><div class="dot-square" style="background:#95a5a6"></div> Zone INACTIVE</div>
     <div class="legend-item">
-        <div style="width:28px; height:4px; background:#2ecc71; border-radius:2px; flex-shrink:0"></div>
+        <div style="width:28px;height:4px;background:#2ecc71;border-radius:2px;flex-shrink:0"></div>
         Active Flow
     </div>
     <div class="legend-item">
-        <div style="width:28px; height:4px; background:#3498db; border-radius:2px; flex-shrink:0"></div>
+        <div style="width:28px;height:4px;background:#3498db;border-radius:2px;flex-shrink:0"></div>
         Pipe
     </div>
 </div>
 
 <script>
-    // ─── CONFIG ──────────────────────────────────────────────────────────────
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzE5sI5yKTYDElO1vRmhu_v_9o0Rs7dnnq1WNbOtHq8FQQ-DqeqBfAU5nZspswbmsaWbQ/exec';
+    // ─── CONFIG — only thing you need to change ───────────────────────────────
+    const GITHUB_USERNAME = 'bluebeardtitan';
+    const GIST_ID         = 'a6ff5a8f656b7736aa2ac6b3eef9907f';
+    const GIST_FILE       = 'myproj_status.json';
 
-    const PROXIES = [
-        'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url='
-    ];
+    // Raw Gist URL — has CORS headers, no proxy needed
+    const API_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/${GIST_FILE}`;
 
     const REFRESH_INTERVAL_MS = 20000;
     // ─────────────────────────────────────────────────────────────────────────
@@ -92,16 +88,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
             <polygon points="32,4 8,56 14,60 32,48 50,60 56,56"
                 fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
-            <rect x="29" y="4" width="6" height="24" rx="2"
-                fill="#27ae60"/>
+            <rect x="29" y="4" width="6" height="24" rx="2" fill="#27ae60"/>
         </svg>`);
 
     const svgValveOff = makeSVG(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
             <polygon points="32,4 8,56 14,60 32,48 50,60 56,56"
                 fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
-            <rect x="29" y="4" width="6" height="24" rx="2"
-                fill="#c0392b"/>
+            <rect x="29" y="4" width="6" height="24" rx="2" fill="#c0392b"/>
         </svg>`);
 
     const svgZoneOn = makeSVG(`
@@ -146,25 +140,10 @@
                     'color': '#2c3e50'
                 }
             },
-            // Valve states
-            {
-                selector: 'node[type="valve"][state="ON"]',
-                style: { 'background-image': svgValveOn }
-            },
-            {
-                selector: 'node[type="valve"][state="OFF"]',
-                style: { 'background-image': svgValveOff }
-            },
-            // Zone / tank states
-            {
-                selector: 'node[type="zone"][state="ON"]',
-                style: { 'background-image': svgZoneOn, 'width': 64, 'height': 64 }
-            },
-            {
-                selector: 'node[type="zone"][state="OFF"]',
-                style: { 'background-image': svgZoneOff, 'width': 64, 'height': 64 }
-            },
-            // Default pipe
+            { selector: 'node[type="valve"][state="ON"]',  style: { 'background-image': svgValveOn } },
+            { selector: 'node[type="valve"][state="OFF"]', style: { 'background-image': svgValveOff } },
+            { selector: 'node[type="zone"][state="ON"]',   style: { 'background-image': svgZoneOn,  'width': 64, 'height': 64 } },
+            { selector: 'node[type="zone"][state="OFF"]',  style: { 'background-image': svgZoneOff, 'width': 64, 'height': 64 } },
             {
                 selector: 'edge',
                 style: {
@@ -181,7 +160,6 @@
                     'text-background-padding': '2px'
                 }
             },
-            // Active flow pipe (set flow="active" in your sheet)
             {
                 selector: 'edge[flow="active"]',
                 style: {
@@ -193,9 +171,9 @@
         ],
         elements: {
             nodes: [
-                { data: { id: 'V1', type: 'valve', state: 'OFF', label: 'V1\nInlet' },    position: { x: 100, y: 150 } },
-                { data: { id: 'V2', type: 'valve', state: 'OFF', label: 'V2\nBooster' }, position: { x: 400, y: 150 } },
-                { data: { id: 'Zone_A', type: 'zone', state: 'ON',  label: 'Zone A' },   position: { x: 250, y: 350 } }
+                { data: { id: 'V1',     type: 'valve', state: 'OFF', label: 'V1\nInlet'   }, position: { x: 100, y: 150 } },
+                { data: { id: 'V2',     type: 'valve', state: 'OFF', label: 'V2\nBooster' }, position: { x: 400, y: 150 } },
+                { data: { id: 'Zone_A', type: 'zone',  state: 'ON',  label: 'Zone A'      }, position: { x: 250, y: 350 } }
             ],
             edges: [
                 { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: 'Main',   flow: '' } },
@@ -207,26 +185,10 @@
         userPanningEnabled: true
     });
 
-    // Optional: log node info on click
     cy.on('tap', 'node', function(evt) {
         const n = evt.target;
         console.log(`[TAP] id=${n.id()} type=${n.data('type')} state=${n.data('state')}`);
     });
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // ─── FETCH WITH PROXY FALLBACK ────────────────────────────────────────────
-    async function fetchWithFallback(url) {
-        for (const proxy of PROXIES) {
-            try {
-                const res = await fetch(proxy + encodeURIComponent(url));
-                if (res.ok) return res;
-                console.warn(`Proxy ${proxy} returned HTTP ${res.status}, trying next...`);
-            } catch (err) {
-                console.warn(`Proxy ${proxy} failed:`, err.message);
-            }
-        }
-        throw new Error('All proxies failed — check console for details');
-    }
     // ─────────────────────────────────────────────────────────────────────────
 
     // ─── REFRESH LOOP ─────────────────────────────────────────────────────────
@@ -234,18 +196,18 @@
         const statusEl = document.getElementById('sync-status');
         statusEl.innerText = 'Syncing...';
         statusEl.style.background = '#34495e';
-
         try {
-            const response = await fetchWithFallback(GAS_URL);
-            const data = await response.json();
+            // Add cache-busting so browser doesn't serve stale Gist content
+            const res = await fetch(API_URL + '?t=' + Date.now());
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            if (data.error) throw new Error('GAS error: ' + data.error);
+            const data = await res.json();
+            if (data.error) throw new Error('Sheet error: ' + data.error);
 
             let updated = 0;
             data.forEach(item => {
                 const el = cy.getElementById(item.id);
-                if (el.length === 0) return; // ID not in diagram — skip silently
-
+                if (el.length === 0) return;
                 if (item.state !== undefined) el.data('state', item.state.toString().toUpperCase());
                 if (item.label !== undefined) el.data('label', item.label.toString());
                 if (item.type  !== undefined) el.data('type',  item.type.toString().toLowerCase());
@@ -253,7 +215,6 @@
                 updated++;
             });
 
-            // Force Cytoscape to re-evaluate all style selectors
             cy.style().update();
 
             statusEl.innerText = `✓ Synced ${new Date().toLocaleTimeString()} (${updated} elements)`;
