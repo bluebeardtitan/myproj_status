@@ -89,29 +89,31 @@ const ICONS = {
 
 // ─── CYTOSCAPE STYLE ──────────────────────────────────────────────────────────
 const CY_STYLE = [
-    {
-        // base — all nodes
-        selector: 'node',
-        style: {
-            'label':              'data(label)',
-            'width':              60,
-            'height':             60,
-            'background-color':   '#ffffff',
-            'background-opacity': 0,
-            'background-image':   ICONS.valveOff,
-            'background-fit':     'contain',
-            'background-clip':    'none',         // ← stop Cytoscape clipping the SVG
-            'background-width':   '100%',
-            'background-height':  '100%',
-            'font-size':          '11px',
-            'font-weight':        'bold',
-            'text-wrap':          'wrap',
-            'text-max-width':     '120px',
-            'text-valign':        'bottom',
-            'text-margin-y':      8,
-            'color':              '#2c3e50'
-        }
-    },
+        {
+            selector: 'node',
+            style: {
+                'label':                  'data(label)',
+                'width':                  60,
+                'height':                 60,
+                'background-color':       '#ffffff',
+                'background-opacity':     0,
+                'background-image':       ICONS.valveOff,
+                'background-fit':         'contain',
+                'background-clip':        'none',
+                'background-width':       '80%',        // ← slightly inset so strokes never touch edge
+                'background-height':      '80%',
+                'background-position-x':  '50%',        // ← centre horizontally
+                'background-position-y':  '50%',        // ← centre vertically
+                'font-size':              '11px',
+                'font-weight':            'bold',
+                'text-wrap':              'wrap',
+                'text-max-width':         '120px',
+                'text-valign':            'bottom',
+                'text-margin-y':          8,
+                'color':                  '#2c3e50',
+                'border-width':           0              // ← make sure no border pushes image off-centre
+            }
+        },
 
     // ── Valves ──────────────────────────────────────────────────────────────
     { selector: 'node[type="valve"][state="ON"]',
