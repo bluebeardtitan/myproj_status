@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Water System Operational Diagram</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <style>
+        #cy {
+            width: 100%;
+            height: 600px;
+            display: block;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+        }
+        body { font-family: sans-serif; }
+        .controls { padding: 10px; background: #eee; }
+    </style>
+</head>
+<body>
+
+    <h2>Operational Water Network</h2>
+    <div class="controls">
+        <button onclick="refreshData()">Manual Refresh</button>
+        <span id="status">Syncing with Google Sheets...</span>
+    </div>
+    
+    <div id="cy"></div>
+
+<script>
+    // 1. Define your SVGs as strings (or use URLs to files in your GitHub repo)
+    const svgValveOn = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ecc71"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
+    const svgValveOff = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
+
+    // 2. Initialize Cytoscape
+    var cy = cytoscape({
+        container: document.getElementById('cy'),
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'label': 'data(id)',
+                    'width': 50,
+                    'height': 50,
+                    'background-opacity': 0,
+                    'background-image': svgValveOff, // Default
+                    'background-fit': 'contain'
+                }
+            },
+            {
+                selector: 'node[state="ON"]',
+                style: { 'background-image': svgValveOn }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 5,
+                    'line-color': '#3498db',
+                    'curve-style': 'bezier',
+                    'target-arrow-shape': 'triangle',
+                    'target-arrow-color': '#3498db'
+                }
+            }
+        ],
+        elements: {
+            nodes: [
+                { data: { id: 'V1', state: 'OFF' }, position: { x: 100, y: 100 } },
+                { data: { id: 'V2', state: 'OFF' }, position: { x: 300, y: 100 } },
+                { data: { id: 'Zone_A', state: 'ON' }, position: { x: 200, y: 250 } }
+            ],
+            edges: [
+                { data: { source: 'V1', target: 'Zone_A' } },
+                { data: { source: 'V2', target: 'Zone_A' } }
+            ]
+        }
+    });
+
+    // 3. Fetch Data from Google Sheets
+    async function refreshData() {
+        document.getElementById('status').innerText = "Updating...";
+        try {
+            const response = await fetch('https://script.google.com/macros/s/AKfycby4z__iSQeyEzxUGvJCr1Gedk7p7pgxNDM4shX-cFXe966_OJlbiNE0JCzHXUZa7NNkHg/exec');
+            const data = await response.json();
+
+            data.forEach(item => {
+                const node = cy.getElementById(item.id);
+                if (node.length > 0) {
+                    node.data('state', item.state); // Triggers the style change
+                }
+            });
+            document.getElementById('status').innerText = "Last sync: " + new Date().toLocaleTimeString();
+        } catch (err) {
+            document.getElementById('status').innerText = "Error fetching data.";
+        }
+    }
+
+    // Auto-refresh every 60 seconds
+    setInterval(refreshData, 60000);
+</script>
+</body>
+</html>
