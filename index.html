@@ -3,30 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>Water System Operational Diagram</title>
+    <title>Water System SCADA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; }
-        #cy { width: 100vw; height: 90vh; display: block; }
-        .header { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        #sync-status { font-size: 0.8em; background: #34495e; padding: 5px 10px; border-radius: 4px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: #f0f4f8; }
+
+        .header {
+            background: #1a252f;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .header h1 { font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; }
+
+        #sync-status {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: #34495e;
+            transition: background 0.4s;
+        }
+
+        #cy { width: 100vw; height: calc(100vh - 50px); display: block; }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 0.8rem;
+        }
+        .legend h4 { margin-bottom: 8px; color: #333; font-size: 0.85rem; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div>Water Project: Operational Diagram</div>
-        <div id="sync-status">Initializing...</div>
-    </div>
-    
-    <div id="cy"></div>
+<div class="header">
+    <h1>🌊 Water Project — Operational Diagram</h1>
+    <div id="sync-status">Initializing...</div>
+</div>
+
+<div id="cy"></div>
+
+<div class="legend">
+    <h4>Legend</h4>
+    <div class="legend-item"><div class="dot" style="background:#2ecc71"></div> Valve OPEN</div>
+    <div class="legend-item"><div class="dot" style="background:#e74c3c"></div> Valve CLOSED</div>
+    <div class="legend-item"><div class="dot" style="background:#3498db; border-radius:3px"></div> Zone / Tank</div>
+</div>
 
 <script>
-    // PASTE YOUR NEW WEB APP URL HERE
     const API_URL = 'https://script.google.com/macros/s/AKfycbzE5sI5yKTYDElO1vRmhu_v_9o0Rs7dnnq1WNbOtHq8FQQ-DqeqBfAU5nZspswbmsaWbQ/exec';
 
-    const svgValveOn = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ecc71"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
-    const svgValveOff = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
+    const svgValve = (color) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+          <polygon points="32,4 8,56 14,60 32,48 50,60 56,56" fill="${color}" stroke="#fff" stroke-width="2"/>
+          <line x1="32" y1="4" x2="32" y2="28" stroke="${color}" stroke-width="6"/>
+        </svg>
+    `);
+
+    const svgZone = (color) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+          <rect x="8" y="16" width="48" height="36" rx="4" fill="${color}" stroke="#fff" stroke-width="2"/>
+          <rect x="20" y="8" width="24" height="12" rx="3" fill="${color}" stroke="#fff" stroke-width="2"/>
+        </svg>
+    `);
+
+    const svgValveOn  = svgValve('#2ecc71');
+    const svgValveOff = svgValve('#e74c3c');
+    const svgZoneOn   = svgZone('#3498db');
+    const svgZoneOff  = svgZone('#95a5a6');
 
     var cy = cytoscape({
         container: document.getElementById('cy'),
@@ -35,22 +90,30 @@
                 selector: 'node',
                 style: {
                     'label': 'data(label)',
-                    'width': 50, 'height': 50,
+                    'width': 52, 'height': 52,
                     'background-opacity': 0,
                     'background-image': svgValveOff,
                     'background-fit': 'contain',
-                    'font-size': '10px',
+                    'font-size': '11px',
+                    'font-weight': 'bold',
                     'text-wrap': 'wrap',
                     'text-max-width': '100px',
                     'text-valign': 'bottom',
-                    'text-margin-y': 5
+                    'text-margin-y': 6,
+                    'color': '#2c3e50'
                 }
             },
-            { selector: 'node[state="ON"]', style: { 'background-image': svgValveOn } },
+            // Valve states
+            { selector: 'node[type="valve"][state="ON"]',  style: { 'background-image': svgValveOn } },
+            { selector: 'node[type="valve"][state="OFF"]', style: { 'background-image': svgValveOff } },
+            // Zone / tank states
+            { selector: 'node[type="zone"][state="ON"]',  style: { 'background-image': svgZoneOn } },
+            { selector: 'node[type="zone"][state="OFF"]', style: { 'background-image': svgZoneOff } },
             {
                 selector: 'edge',
                 style: {
-                    'width': 4, 'line-color': '#3498db',
+                    'width': 4,
+                    'line-color': '#3498db',
                     'target-arrow-shape': 'triangle',
                     'target-arrow-color': '#3498db',
                     'curve-style': 'bezier',
@@ -58,50 +121,74 @@
                     'font-size': '9px',
                     'edge-text-rotation': 'autorotate',
                     'text-background-opacity': 1,
-                    'text-background-color': '#ffffff'
+                    'text-background-color': '#f0f4f8',
+                    'text-background-padding': '2px'
                 }
+            },
+            // Active flow edge (when source valve is ON)
+            {
+                selector: 'edge[flow="active"]',
+                style: { 'line-color': '#2ecc71', 'target-arrow-color': '#2ecc71', 'width': 5 }
             }
         ],
         elements: {
             nodes: [
-                { data: { id: 'V1', state: 'OFF', label: 'V1' }, position: { x: 100, y: 100 } },
-                { data: { id: 'V2', state: 'OFF', label: 'V2' }, position: { x: 400, y: 100 } },
-                { data: { id: 'Zone_A', state: 'ON', label: 'Zone A' }, position: { x: 250, y: 300 } }
+                { data: { id: 'V1', type: 'valve', state: 'OFF', label: 'V1\nInlet' },   position: { x: 100, y: 150 } },
+                { data: { id: 'V2', type: 'valve', state: 'OFF', label: 'V2\nBooster' }, position: { x: 400, y: 150 } },
+                { data: { id: 'Zone_A', type: 'zone', state: 'ON', label: 'Zone A' },    position: { x: 250, y: 350 } }
             ],
             edges: [
-                { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: '' } },
-                { data: { id: 'P2', source: 'V2', target: 'Zone_A', label: '' } }
+                { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: 'Main' } },
+                { data: { id: 'P2', source: 'V2', target: 'Zone_A', label: 'Bypass' } }
             ]
-        }
+        },
+        layout: { name: 'preset' },
+        userZoomingEnabled: true,
+        userPanningEnabled: true
+    });
+
+    // Show node info on click (optional tooltip)
+    cy.on('tap', 'node', function(evt) {
+        const n = evt.target;
+        console.log(`Node: ${n.id()} | Type: ${n.data('type')} | State: ${n.data('state')}`);
     });
 
     async function refreshData() {
         const statusEl = document.getElementById('sync-status');
+        statusEl.innerText = 'Syncing...';
         try {
-            // Using {redirect: 'follow'} is the secret for Google Apps Script
             const response = await fetch(API_URL, { redirect: 'follow' });
-            if (!response.ok) throw new Error('Network response was not ok');
-            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
             const data = await response.json();
-            
+            if (data.error) throw new Error(data.error);
+
+            let updated = 0;
             data.forEach(item => {
+                // Apps Script lowercases headers — use lowercase keys
                 const el = cy.getElementById(item.id);
-                if (el.length > 0) {
-                    if (item.state) el.data('state', item.state.toUpperCase());
-                    if (item.label) el.data('label', item.label);
-                }
+                if (el.length === 0) return;
+
+                if (item.state !== undefined) el.data('state', item.state.toString().toUpperCase());
+                if (item.label !== undefined) el.data('label', item.label);
+                if (item.type  !== undefined) el.data('type',  item.type.toString().toLowerCase());
+                if (item.flow  !== undefined) el.data('flow',  item.flow.toString().toLowerCase());
+                updated++;
             });
 
-            statusEl.innerText = "Synced: " + new Date().toLocaleTimeString();
-            statusEl.style.background = "#27ae60";
+            // Force Cytoscape to re-evaluate all selectors after bulk update
+            cy.style().update();
+
+            const time = new Date().toLocaleTimeString();
+            statusEl.innerText = `✓ Synced ${time} (${updated} elements)`;
+            statusEl.style.background = '#27ae60';
         } catch (err) {
-            console.error("Fetch Error:", err);
-            statusEl.innerText = "Sync Error - Check Console";
-            statusEl.style.background = "#c0392b";
+            console.error('Fetch Error:', err);
+            statusEl.innerText = `⚠ Sync failed: ${err.message}`;
+            statusEl.style.background = '#c0392b';
         }
     }
 
-    // Run every 20 seconds
     refreshData();
     setInterval(refreshData, 20000);
 </script>
