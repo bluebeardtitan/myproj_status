@@ -1,148 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Network Operational Dashboard</title>
     <link rel="icon" href="data:,">
+    <title>Water System Operational Diagram</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; overflow: hidden; }
-        #cy { width: 100vw; height: 100vh; background-color: #f0f2f5; display: block; }
-        
-        .ui-panel {
-            position: absolute; top: 20px; left: 20px; z-index: 10;
-            background: rgba(255, 255, 255, 0.9); padding: 15px;
-            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-        }
-        h2 { margin: 0 0 10px 0; font-size: 18px; color: #2c3e50; }
-        .status-text { font-size: 12px; color: #7f8c8d; }
-        button { 
-            background: #3498db; color: white; border: none; padding: 8px 12px; 
-            border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 5px;
-        }
-        button:hover { background: #2980b9; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; }
+        #cy { width: 100vw; height: 90vh; display: block; }
+        .header { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        #sync-status { font-size: 0.8em; background: #34495e; padding: 5px 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="ui-panel">
-        <h2>Water System Ops</h2>
-        <button onclick="refreshData()">Sync Now</button>
-        <div id="sync-status" class="status-text">Connecting to Google Sheets...</div>
+    <div class="header">
+        <div>Water Project: Operational Diagram</div>
+        <div id="sync-status">Initializing...</div>
     </div>
     
     <div id="cy"></div>
 
 <script>
-    // Replace this with your actual Google Apps Script Web App URL
-    const SHEET_API_URL = 'YOUR_APPS_SCRIPT_URL';
+    // PASTE YOUR NEW WEB APP URL HERE
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzE5sI5yKTYDElO1vRmhu_v_9o0Rs7dnnq1WNbOtHq8FQQ-DqeqBfAU5nZspswbmsaWbQ/exec';
 
-    // SVG Symbols
     const svgValveOn = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ecc71"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
     const svgValveOff = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
 
-    // Initialize Cytoscape
     var cy = cytoscape({
         container: document.getElementById('cy'),
         style: [
             {
                 selector: 'node',
                 style: {
-                    'label': 'data(id)',
-                    'width': 60,
-                    'height': 60,
+                    'label': 'data(label)',
+                    'width': 50, 'height': 50,
                     'background-opacity': 0,
                     'background-image': svgValveOff,
                     'background-fit': 'contain',
-                    'font-size': '12px',
-                    'color': '#2c3e50',
+                    'font-size': '10px',
+                    'text-wrap': 'wrap',
+                    'text-max-width': '100px',
                     'text-valign': 'bottom',
                     'text-margin-y': 5
                 }
             },
-            {
-                selector: 'node[state="ON"]',
-                style: { 'background-image': svgValveOn }
-            },
+            { selector: 'node[state="ON"]', style: { 'background-image': svgValveOn } },
             {
                 selector: 'edge',
                 style: {
-                    'width': 6,
-                    'line-color': '#3498db',
-                    'curve-style': 'bezier',
+                    'width': 4, 'line-color': '#3498db',
                     'target-arrow-shape': 'triangle',
                     'target-arrow-color': '#3498db',
-                    // Edge Label Styling
+                    'curve-style': 'bezier',
                     'label': 'data(label)',
-                    'font-size': '11px',
-                    'color': '#2980b9',
-                    'text-background-color': '#ffffff',
-                    'text-background-opacity': 0.8,
-                    'text-background-padding': '2px',
-                    'edge-text-rotation': 'autorotate'
-                }
-            },
-            {
-                selector: 'edge[state="OFF"]',
-                style: {
-                    'line-color': '#bdc3c7',
-                    'target-arrow-color': '#bdc3c7'
+                    'font-size': '9px',
+                    'edge-text-rotation': 'autorotate',
+                    'text-background-opacity': 1,
+                    'text-background-color': '#ffffff'
                 }
             }
         ],
         elements: {
             nodes: [
-                { data: { id: 'V1', state: 'OFF' }, position: { x: 100, y: 150 } },
-                { data: { id: 'V2', state: 'OFF' }, position: { x: 400, y: 150 } },
-                { data: { id: 'Zone_A', state: 'ON' }, position: { x: 250, y: 350 } }
+                { data: { id: 'V1', state: 'OFF', label: 'V1' }, position: { x: 100, y: 100 } },
+                { data: { id: 'V2', state: 'OFF', label: 'V2' }, position: { x: 400, y: 100 } },
+                { data: { id: 'Zone_A', state: 'ON', label: 'Zone A' }, position: { x: 250, y: 300 } }
             ],
             edges: [
-                // Note: The 'id' here must match the 'id' in your Google Sheet row
-                { data: { id: 'P1', source: 'V1', target: 'Zone_A', state: 'OFF', label: '' } },
-                { data: { id: 'P2', source: 'V2', target: 'Zone_A', state: 'OFF', label: '' } }
+                { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: '' } },
+                { data: { id: 'P2', source: 'V2', target: 'Zone_A', label: '' } }
             ]
-        },
-        layout: { name: 'manual' }
+        }
     });
 
-    // Refresh function
     async function refreshData() {
         const statusEl = document.getElementById('sync-status');
-        statusEl.innerText = "Syncing...";
-
         try {
-            const response = await fetch(https://script.google.com/macros/s/AKfycbx5Oh-XU9YAaKcmSS9TuHKW-0psCC-seH08i_o02JsN/dev, { redirect: 'follow' });
-            if (!response.ok) throw new Error('API Error');
+            // Using {redirect: 'follow'} is the secret for Google Apps Script
+            const response = await fetch(API_URL, { redirect: 'follow' });
+            if (!response.ok) throw new Error('Network response was not ok');
             
             const data = await response.json();
             
             data.forEach(item => {
-                const element = cy.getElementById(item.id);
-                if (element.length > 0) {
-                    // Update state (for colors/icons)
-                    if (item.state) {
-                        element.data('state', item.state.toUpperCase());
-                    }
-                    // Update label (for flow/pressure text)
-                    if (item.label) {
-                        element.data('label', item.label);
-                    }
+                const el = cy.getElementById(item.id);
+                if (el.length > 0) {
+                    if (item.state) el.data('state', item.state.toUpperCase());
+                    if (item.label) el.data('label', item.label);
                 }
             });
 
-            statusEl.innerText = "Last sync: " + new Date().toLocaleTimeString();
+            statusEl.innerText = "Synced: " + new Date().toLocaleTimeString();
+            statusEl.style.background = "#27ae60";
         } catch (err) {
-            console.error(err);
-            statusEl.innerText = "Sync Failed. Check URL/Console.";
+            console.error("Fetch Error:", err);
+            statusEl.innerText = "Sync Error - Check Console";
+            statusEl.style.background = "#c0392b";
         }
     }
 
-    // Initial load and auto-refresh every 30 seconds
+    // Run every 20 seconds
     refreshData();
-    setInterval(refreshData, 30000);
-
+    setInterval(refreshData, 20000);
 </script>
 </body>
 </html>
