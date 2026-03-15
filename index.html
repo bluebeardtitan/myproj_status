@@ -39,10 +39,12 @@
             padding: 12px 16px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             font-size: 0.8rem;
+            z-index: 10;
         }
         .legend h4 { margin-bottom: 8px; color: #333; font-size: 0.85rem; }
         .legend-item { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
         .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        .dot-square { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
     </style>
 </head>
 <body>
@@ -58,31 +60,72 @@
     <h4>Legend</h4>
     <div class="legend-item"><div class="dot" style="background:#2ecc71"></div> Valve OPEN</div>
     <div class="legend-item"><div class="dot" style="background:#e74c3c"></div> Valve CLOSED</div>
-    <div class="legend-item"><div class="dot" style="background:#3498db; border-radius:3px"></div> Zone / Tank</div>
+    <div class="legend-item"><div class="dot-square" style="background:#3498db"></div> Zone ACTIVE</div>
+    <div class="legend-item"><div class="dot-square" style="background:#95a5a6"></div> Zone INACTIVE</div>
+    <div class="legend-item">
+        <div style="width:28px; height:4px; background:#2ecc71; border-radius:2px; flex-shrink:0"></div>
+        Active Flow
+    </div>
+    <div class="legend-item">
+        <div style="width:28px; height:4px; background:#3498db; border-radius:2px; flex-shrink:0"></div>
+        Pipe
+    </div>
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzE5sI5yKTYDElO1vRmhu_v_9o0Rs7dnnq1WNbOtHq8FQQ-DqeqBfAU5nZspswbmsaWbQ/exec';
+    // ─── CONFIG ──────────────────────────────────────────────────────────────
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzE5sI5yKTYDElO1vRmhu_v_9o0Rs7dnnq1WNbOtHq8FQQ-DqeqBfAU5nZspswbmsaWbQ/exec';
 
-    const svgValve = (color) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    const PROXIES = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url='
+    ];
+
+    const REFRESH_INTERVAL_MS = 20000;
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ─── SVG ICONS ────────────────────────────────────────────────────────────
+    const makeSVG = (svgContent) =>
+        'data:image/svg+xml;utf8,' + encodeURIComponent(svgContent);
+
+    const svgValveOn = makeSVG(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-          <polygon points="32,4 8,56 14,60 32,48 50,60 56,56" fill="${color}" stroke="#fff" stroke-width="2"/>
-          <line x1="32" y1="4" x2="32" y2="28" stroke="${color}" stroke-width="6"/>
-        </svg>
-    `);
+            <polygon points="32,4 8,56 14,60 32,48 50,60 56,56"
+                fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+            <rect x="29" y="4" width="6" height="24" rx="2"
+                fill="#27ae60"/>
+        </svg>`);
 
-    const svgZone = (color) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    const svgValveOff = makeSVG(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-          <rect x="8" y="16" width="48" height="36" rx="4" fill="${color}" stroke="#fff" stroke-width="2"/>
-          <rect x="20" y="8" width="24" height="12" rx="3" fill="${color}" stroke="#fff" stroke-width="2"/>
-        </svg>
-    `);
+            <polygon points="32,4 8,56 14,60 32,48 50,60 56,56"
+                fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
+            <rect x="29" y="4" width="6" height="24" rx="2"
+                fill="#c0392b"/>
+        </svg>`);
 
-    const svgValveOn  = svgValve('#2ecc71');
-    const svgValveOff = svgValve('#e74c3c');
-    const svgZoneOn   = svgZone('#3498db');
-    const svgZoneOff  = svgZone('#95a5a6');
+    const svgZoneOn = makeSVG(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <rect x="6" y="18" width="52" height="36" rx="5"
+                fill="#3498db" stroke="#ffffff" stroke-width="2"/>
+            <rect x="22" y="8" width="20" height="14" rx="3"
+                fill="#2980b9" stroke="#ffffff" stroke-width="2"/>
+            <rect x="10" y="28" width="44" height="4" rx="2"
+                fill="rgba(255,255,255,0.3)"/>
+        </svg>`);
 
+    const svgZoneOff = makeSVG(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <rect x="6" y="18" width="52" height="36" rx="5"
+                fill="#95a5a6" stroke="#ffffff" stroke-width="2"/>
+            <rect x="22" y="8" width="20" height="14" rx="3"
+                fill="#7f8c8d" stroke="#ffffff" stroke-width="2"/>
+            <rect x="10" y="28" width="44" height="4" rx="2"
+                fill="rgba(255,255,255,0.2)"/>
+        </svg>`);
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ─── CYTOSCAPE INIT ───────────────────────────────────────────────────────
     var cy = cytoscape({
         container: document.getElementById('cy'),
         style: [
@@ -90,25 +133,38 @@
                 selector: 'node',
                 style: {
                     'label': 'data(label)',
-                    'width': 52, 'height': 52,
+                    'width': 54, 'height': 54,
                     'background-opacity': 0,
                     'background-image': svgValveOff,
                     'background-fit': 'contain',
                     'font-size': '11px',
                     'font-weight': 'bold',
                     'text-wrap': 'wrap',
-                    'text-max-width': '100px',
+                    'text-max-width': '110px',
                     'text-valign': 'bottom',
                     'text-margin-y': 6,
                     'color': '#2c3e50'
                 }
             },
             // Valve states
-            { selector: 'node[type="valve"][state="ON"]',  style: { 'background-image': svgValveOn } },
-            { selector: 'node[type="valve"][state="OFF"]', style: { 'background-image': svgValveOff } },
+            {
+                selector: 'node[type="valve"][state="ON"]',
+                style: { 'background-image': svgValveOn }
+            },
+            {
+                selector: 'node[type="valve"][state="OFF"]',
+                style: { 'background-image': svgValveOff }
+            },
             // Zone / tank states
-            { selector: 'node[type="zone"][state="ON"]',  style: { 'background-image': svgZoneOn } },
-            { selector: 'node[type="zone"][state="OFF"]', style: { 'background-image': svgZoneOff } },
+            {
+                selector: 'node[type="zone"][state="ON"]',
+                style: { 'background-image': svgZoneOn, 'width': 64, 'height': 64 }
+            },
+            {
+                selector: 'node[type="zone"][state="OFF"]',
+                style: { 'background-image': svgZoneOff, 'width': 64, 'height': 64 }
+            },
+            // Default pipe
             {
                 selector: 'edge',
                 style: {
@@ -125,21 +181,25 @@
                     'text-background-padding': '2px'
                 }
             },
-            // Active flow edge (when source valve is ON)
+            // Active flow pipe (set flow="active" in your sheet)
             {
                 selector: 'edge[flow="active"]',
-                style: { 'line-color': '#2ecc71', 'target-arrow-color': '#2ecc71', 'width': 5 }
+                style: {
+                    'line-color': '#2ecc71',
+                    'target-arrow-color': '#2ecc71',
+                    'width': 5
+                }
             }
         ],
         elements: {
             nodes: [
-                { data: { id: 'V1', type: 'valve', state: 'OFF', label: 'V1\nInlet' },   position: { x: 100, y: 150 } },
+                { data: { id: 'V1', type: 'valve', state: 'OFF', label: 'V1\nInlet' },    position: { x: 100, y: 150 } },
                 { data: { id: 'V2', type: 'valve', state: 'OFF', label: 'V2\nBooster' }, position: { x: 400, y: 150 } },
-                { data: { id: 'Zone_A', type: 'zone', state: 'ON', label: 'Zone A' },    position: { x: 250, y: 350 } }
+                { data: { id: 'Zone_A', type: 'zone', state: 'ON',  label: 'Zone A' },   position: { x: 250, y: 350 } }
             ],
             edges: [
-                { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: 'Main' } },
-                { data: { id: 'P2', source: 'V2', target: 'Zone_A', label: 'Bypass' } }
+                { data: { id: 'P1', source: 'V1', target: 'Zone_A', label: 'Main',   flow: '' } },
+                { data: { id: 'P2', source: 'V2', target: 'Zone_A', label: 'Bypass', flow: '' } }
             ]
         },
         layout: { name: 'preset' },
@@ -147,68 +207,58 @@
         userPanningEnabled: true
     });
 
-    // Show node info on click (optional tooltip)
+    // Optional: log node info on click
     cy.on('tap', 'node', function(evt) {
         const n = evt.target;
-        console.log(`Node: ${n.id()} | Type: ${n.data('type')} | State: ${n.data('state')}`);
+        console.log(`[TAP] id=${n.id()} type=${n.data('type')} state=${n.data('state')}`);
     });
+    // ─────────────────────────────────────────────────────────────────────────
 
-    // JSONP helper — bypasses CORS entirely via <script> injection
-    function fetchJSONP(url, timeoutMs = 10000) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'scada_cb_' + Date.now();
-            const script = document.createElement('script');
-
-            const timer = setTimeout(() => {
-                cleanup();
-                reject(new Error('JSONP request timed out'));
-            }, timeoutMs);
-
-            window[callbackName] = function(data) {
-                cleanup();
-                resolve(data);
-            };
-
-            function cleanup() {
-                clearTimeout(timer);
-                delete window[callbackName];
-                if (script.parentNode) script.parentNode.removeChild(script);
+    // ─── FETCH WITH PROXY FALLBACK ────────────────────────────────────────────
+    async function fetchWithFallback(url) {
+        for (const proxy of PROXIES) {
+            try {
+                const res = await fetch(proxy + encodeURIComponent(url));
+                if (res.ok) return res;
+                console.warn(`Proxy ${proxy} returned HTTP ${res.status}, trying next...`);
+            } catch (err) {
+                console.warn(`Proxy ${proxy} failed:`, err.message);
             }
-
-            script.onerror = () => {
-                cleanup();
-                reject(new Error('JSONP script failed to load'));
-            };
-
-            // Append ?callback=scada_cb_1234567 to the URL
-            script.src = url + '?callback=' + callbackName;
-            document.head.appendChild(script);
-        });
+        }
+        throw new Error('All proxies failed — check console for details');
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
+    // ─── REFRESH LOOP ─────────────────────────────────────────────────────────
     async function refreshData() {
         const statusEl = document.getElementById('sync-status');
         statusEl.innerText = 'Syncing...';
-        try {
-            const data = await fetchJSONP(API_URL);
+        statusEl.style.background = '#34495e';
 
-            if (data.error) throw new Error(data.error);
+        try {
+            const response = await fetchWithFallback(GAS_URL);
+            const data = await response.json();
+
+            if (data.error) throw new Error('GAS error: ' + data.error);
 
             let updated = 0;
             data.forEach(item => {
                 const el = cy.getElementById(item.id);
-                if (el.length === 0) return;
+                if (el.length === 0) return; // ID not in diagram — skip silently
+
                 if (item.state !== undefined) el.data('state', item.state.toString().toUpperCase());
-                if (item.label !== undefined) el.data('label', item.label);
+                if (item.label !== undefined) el.data('label', item.label.toString());
                 if (item.type  !== undefined) el.data('type',  item.type.toString().toLowerCase());
                 if (item.flow  !== undefined) el.data('flow',  item.flow.toString().toLowerCase());
                 updated++;
             });
 
+            // Force Cytoscape to re-evaluate all style selectors
             cy.style().update();
 
-            statusEl.innerText = `✓ Synced ${new Date().toLocaleTimeString()} (${updated} nodes)`;
+            statusEl.innerText = `✓ Synced ${new Date().toLocaleTimeString()} (${updated} elements)`;
             statusEl.style.background = '#27ae60';
+
         } catch (err) {
             console.error('Sync error:', err);
             statusEl.innerText = `⚠ ${err.message}`;
@@ -217,7 +267,8 @@
     }
 
     refreshData();
-    setInterval(refreshData, 20000);
+    setInterval(refreshData, REFRESH_INTERVAL_MS);
+    // ─────────────────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>
