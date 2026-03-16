@@ -85,20 +85,21 @@ const CY_STYLE = [
         selector: 'node',
         style: {
             'label':                'data(label)',
+            'shape':                'rectangle',    // ← THIS is the fix, ellipse was clipping to a circle
             'width':                60,
             'height':               60,
             'background-opacity':   0,
             'background-image':     ICONS.valveOff,
-            'background-fit':       'contain',      // ← only this, no offset tricks
+            'background-fit':       'contain',
             'background-clip':      'none',
+            'border-width':         0,
             'font-size':            '11px',
             'font-weight':          'bold',
             'text-wrap':            'wrap',
             'text-max-width':       '120px',
             'text-valign':          'bottom',
             'text-margin-y':        10,
-            'color':                '#2c3e50',
-            'border-width':         0
+            'color':                '#2c3e50'
         }
     },
 
