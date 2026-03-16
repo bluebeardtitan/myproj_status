@@ -218,9 +218,69 @@ function applyStatus(cy, data) {
         updated++;
     });
 
+    // Auto-derive which pipes carry flow based on valve/pump states.
+    // Runs after every status sync — the backend only needs to set valve/pump
+    // states; edge flow states are computed automatically from the graph.
+    propagateFlow(cy);
+
     cy.style().update();
 
     return updated;
+}
+
+// ─── FLOW PROPAGATION ────────────────────────────────────────────────────────
+// Walks the directed graph from every running pump (type=pump, state=ON).
+// An edge is "reachable" if there is a continuous upstream path that is NOT
+// blocked by a closed valve (type=valve, state=OFF).
+//
+// Rules:
+//   reachable  + flow="fault"  → keep "fault"  (explicit faults always win)
+//   reachable  + anything else → set  "active"
+//   unreachable                → clear flow    (empty string = idle pipe colour)
+//
+// If the diagram has no pump nodes at all, the function is a no-op so that
+// simple layouts without pumps still work as before.
+
+function propagateFlow(cy) {
+
+    const hasPumps = cy.nodes('[type="pump"]').length > 0;
+    if (!hasPumps) return;
+
+    // ── BFS from every ON pump ────────────────────────────────────────────────
+    const reachableEdges = new Set();
+    const visitedNodes   = new Set();
+
+    const queue = cy.nodes('[type="pump"][state="ON"]').toArray();
+
+    while (queue.length > 0) {
+
+        const node = queue.shift();
+        const nid  = node.id();
+
+        if (visitedNodes.has(nid)) continue;
+        visitedNodes.add(nid);
+
+        // Closed valve: water reaches the valve body but does NOT pass through.
+        // Mark incoming edge reachable (water is there), stop outgoing traversal.
+        if (node.data('type') === 'valve' && node.data('state') === 'OFF') continue;
+
+        node.outgoers('edge').forEach(edge => {
+            reachableEdges.add(edge.id());
+            queue.push(edge.target());
+        });
+    }
+
+    // ── Write derived flow state back to every edge ───────────────────────────
+    cy.batch(() => {
+        cy.edges().forEach(edge => {
+            const current = edge.data('flow');
+            if (reachableEdges.has(edge.id())) {
+                if (current !== 'fault') edge.data('flow', 'active');
+            } else {
+                if (current !== 'fault') edge.data('flow', '');
+            }
+        });
+    });
 }
 
 // ─── ANIMATIONS ──────────────────────────────────────────────────────────────
