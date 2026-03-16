@@ -134,11 +134,6 @@
                 select.appendChild(opt);
             });
 
-            // Auto-load first zone
-            if (zones.length > 0) {
-                select.selectedIndex = 1;
-                loadZone(zones[0]);
-            }
         } catch (err) {
             select.innerHTML = '<option>Error loading manifest</option>';
             console.error(err);
