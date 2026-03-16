@@ -97,8 +97,8 @@ selector: 'node',
 style: {
     'label': 'data(label)',
 
-    'width': 60,
-    'height': 60,
+    'width': 200,
+    'height': 200,
 
     'background-opacity': 0,
     'background-image': ICONS.valveOff,
