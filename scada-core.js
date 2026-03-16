@@ -1,203 +1,137 @@
-// ─── SVG ICONS ────────────────────────────────────────────────────────────────
-// All SVGs use padded viewBox so Cytoscape never clips edges
+// ─── COLOUR PALETTE ───────────────────────────────────────────────────────────
+// All node rendering uses Cytoscape native shapes — no SVG background images.
+// Native shapes are drawn by the canvas renderer so they stay crisp at any zoom.
+//
+//  Valve  → diamond         (rotated square — standard P&ID valve symbol)
+//  Pump   → ellipse         (circle — standard pump symbol)
+//  Zone   → round-rectangle
+//
+//  Valve ON  → green fill,   Valve OFF → red fill
+//  Pump  ON  → purple fill,  Pump  OFF → grey fill
+//  Zone  ON  → blue fill,    Zone  OFF → grey fill
 
-const makeSVG = (s) => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
-
-const ICONS = {
-
-    // Butterfly / bowtie valve — two wings symmetric about (50,50).
-    // Wing bounding box: x=[8,92] centre=50, y=[15,85] centre=50. ✓
-    // Actuator stem (narrow) extends to y=1 but doesn't shift visual mass.
-    valveOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <polygon points="8,15 8,85 50,50"
-            fill="#2ecc71" stroke="#27ae60" stroke-width="2" stroke-linejoin="round"/>
-        <polygon points="92,15 92,85 50,50"
-            fill="#2ecc71" stroke="#27ae60" stroke-width="2" stroke-linejoin="round"/>
-        <rect x="46" y="1" width="8" height="18" rx="3"
-            fill="#ffffff" opacity="0.55"/>
-        <circle cx="50" cy="50" r="6"
-            fill="#27ae60" stroke="#ffffff" stroke-width="2"/>
-    </svg>`),
-
-    valveOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <polygon points="8,15 8,85 50,50"
-            fill="#e74c3c" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-        <polygon points="92,15 92,85 50,50"
-            fill="#e74c3c" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-        <rect x="46" y="1" width="8" height="18" rx="3"
-            fill="#ffffff" opacity="0.45"/>
-        <circle cx="50" cy="50" r="6"
-            fill="#c0392b" stroke="#ffffff" stroke-width="2"/>
-        <line x1="30" y1="30" x2="70" y2="70"
-            stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
-        <line x1="70" y1="30" x2="30" y2="70"
-            stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
-    </svg>`),
-
-    // Building — body y=[30,90] + roof y=[8,34].
-    // Bounding box: x=[10,90] centre=50 ✓,  y=[8,90] centre=49 ✓
-    zoneOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <rect x="10" y="30" width="80" height="60" rx="7"
-            fill="#3498db" stroke="#2980b9" stroke-width="2"/>
-        <rect x="32" y="8" width="36" height="26" rx="5"
-            fill="#2980b9" stroke="#1a6fa3" stroke-width="2"/>
-        <rect x="16" y="50" width="68" height="7" rx="3"
-            fill="#ffffff" opacity="0.22"/>
-        <rect x="16" y="39" width="28" height="5" rx="2"
-            fill="#ffffff" opacity="0.28"/>
-        <circle cx="76" cy="39" r="7"
-            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
-    </svg>`),
-
-    zoneOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <rect x="10" y="30" width="80" height="60" rx="7"
-            fill="#bdc3c7" stroke="#95a5a6" stroke-width="2"/>
-        <rect x="32" y="8" width="36" height="26" rx="5"
-            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
-        <rect x="16" y="50" width="68" height="7" rx="3"
-            fill="#ffffff" opacity="0.15"/>
-        <circle cx="76" cy="39" r="7"
-            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
-    </svg>`),
-
-    // Pump — main circle already centred at (50,50). No geometry changes.
-    pumpOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <circle cx="50" cy="50" r="38"
-            fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.45" transform="rotate(0 50 50)"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.45" transform="rotate(60 50 50)"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.45" transform="rotate(120 50 50)"/>
-        <circle cx="50" cy="50" r="10"
-            fill="#6c3483"/>
-        <circle cx="72" cy="28" r="7"
-            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
-    </svg>`),
-
-    pumpOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120"
-        preserveAspectRatio="xMidYMid meet">
-        <circle cx="50" cy="50" r="38"
-            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.25" transform="rotate(0 50 50)"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.25" transform="rotate(60 50 50)"/>
-        <ellipse cx="50" cy="28" rx="7" ry="14"
-            fill="#ffffff" opacity="0.25" transform="rotate(120 50 50)"/>
-        <circle cx="50" cy="50" r="10"
-            fill="#7f8c8d"/>
-        <circle cx="72" cy="28" r="7"
-            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
-    </svg>`)
+const COLOR = {
+    on:             '#2ecc71',
+    onBorder:       '#27ae60',
+    valveOff:       '#e74c3c',
+    valveOffBorder: '#c0392b',
+    pump:           '#8e44ad',
+    pumpBorder:     '#6c3483',
+    pumpOff:        '#95a5a6',
+    pumpOffBorder:  '#7f8c8d',
+    zone:           '#3498db',
+    zoneBorder:     '#2980b9',
+    zoneOff:        '#bdc3c7',
+    zoneOffBorder:  '#95a5a6'
 };
 
 // ─── CYTOSCAPE STYLE ──────────────────────────────────────────────────────────
 const CY_STYLE = [
+
+// ── Default (fallback) node ────────────────────────────────────────────────
 {
     selector: 'node',
     style: {
         'label': 'data(label)',
 
-        'width': 50,
-        'height': 50,
+        'shape': 'diamond',
+        'width': 44,
+        'height': 44,
 
-        'background-opacity': 0,
-        'background-image': ICONS.valveOff,
-
-        'background-fit': 'contain',
-        'background-width': '90%',
-        'background-height': '90%',
-
-        'background-position-x': '50%',
-        'background-position-y': '50%',
-
-        'background-clip': 'none',
+        'background-color': COLOR.valveOff,
+        'border-width': 2,
+        'border-color': COLOR.valveOffBorder,
 
         'font-size': '11px',
         'font-weight': 'bold',
-
         'text-wrap': 'wrap',
         'text-max-width': '120px',
-
         'text-valign': 'bottom',
-        'text-margin-y': 14,
-
+        'text-margin-y': 8,
         'color': '#2c3e50',
-
-        'min-zoomed-font-size': 8,
-
-        'border-width': 0
+        'min-zoomed-font-size': 8
     }
 },
 
-// ── Valves ─────────────────────────────────────────────
+// ── Valves — diamond shape ─────────────────────────────────────────────────
+{
+    selector: 'node[type="valve"]',
+    style: {
+        'shape': 'diamond',
+        'width': 44,
+        'height': 44
+    }
+},
 {
     selector: 'node[type="valve"][state="ON"]',
     style: {
-        'background-image': ICONS.valveOn,
-        'border-color': '#2ecc71',
-        'border-opacity': 0.7
+        'background-color': COLOR.on,
+        'border-color':     COLOR.onBorder,
+        'border-width': 3
     }
 },
-
 {
     selector: 'node[type="valve"][state="OFF"]',
-    style: { 'background-image': ICONS.valveOff }
-},
-
-// ── Zones ──────────────────────────────────────────────
-{
-    selector: 'node[type="zone"]',
     style: {
-        'width': 50,
-        'height': 50
+        'background-color': COLOR.valveOff,
+        'border-color':     COLOR.valveOffBorder,
+        'border-width': 2
     }
 },
 
-{
-    selector: 'node[type="zone"][state="ON"]',
-    style: { 'background-image': ICONS.zoneOn }
-},
-
-{
-    selector: 'node[type="zone"][state="OFF"]',
-    style: { 'background-image': ICONS.zoneOff }
-},
-
-// ── Pumps ──────────────────────────────────────────────
+// ── Pumps — circle (ellipse) ───────────────────────────────────────────────
 {
     selector: 'node[type="pump"]',
     style: {
-        'width': 50,
-        'height': 50,
-        'background-fit': 'contain'
+        'shape': 'ellipse',
+        'width': 48,
+        'height': 48
+    }
+},
+{
+    selector: 'node[type="pump"][state="ON"]',
+    style: {
+        'background-color': COLOR.pump,
+        'border-color':     COLOR.on,
+        'border-width': 3
+    }
+},
+{
+    selector: 'node[type="pump"][state="OFF"]',
+    style: {
+        'background-color': COLOR.pumpOff,
+        'border-color':     COLOR.pumpOffBorder,
+        'border-width': 2
     }
 },
 
+// ── Zones — rounded rectangle ─────────────────────────────────────────────
 {
-    selector: 'node[type="pump"][state="ON"]',
-    style: { 'background-image': ICONS.pumpOn }
+    selector: 'node[type="zone"]',
+    style: {
+        'shape': 'round-rectangle',
+        'width': 56,
+        'height': 44
+    }
+},
+{
+    selector: 'node[type="zone"][state="ON"]',
+    style: {
+        'background-color': COLOR.zone,
+        'border-color':     COLOR.zoneBorder,
+        'border-width': 3
+    }
+},
+{
+    selector: 'node[type="zone"][state="OFF"]',
+    style: {
+        'background-color': COLOR.zoneOff,
+        'border-color':     COLOR.zoneOffBorder,
+        'border-width': 2
+    }
 },
 
-{
-    selector: 'node[type="pump"][state="OFF"]',
-    style: { 'background-image': ICONS.pumpOff }
-},
-
-// ── Pipes / Edges ──────────────────────────────────────
+// ── Pipes / Edges ──────────────────────────────────────────────────────────
 {
     selector: 'edge',
     style: {
@@ -211,7 +145,6 @@ const CY_STYLE = [
 
         'label': 'data(label)',
         'font-size': '9px',
-
         'edge-text-rotation': 'autorotate',
 
         'text-background-opacity': 1,
@@ -311,30 +244,32 @@ function startAnimations(cy) {
     }
     animateFlow();
 
-    // ── 2. Pump rotation ─────────────────────────────────────────────────────
-    let pumpAngle = 0;
+    // ── 2. Pump ON: border-width pulse (replaces old SVG rotation) ────────────
+    // Pumps are native circles so there's nothing to spin.
+    // A green border pulse communicates "running" clearly.
+    let pumpPhase = 0;
     function animatePumps() {
         if (!running) return;
-        pumpAngle = (pumpAngle + 2) % 360;
+        pumpPhase = (pumpPhase + 0.07) % (Math.PI * 2);
+        const bw = 3 + Math.sin(pumpPhase) * 2.5;    // oscillates ~0.5 → 5.5 px
         cy.batch(() => {
             cy.nodes('[type="pump"][state="ON"]').forEach(n => {
-                n.style('background-image-crossorigin', 'anonymous');  // keep image fresh
-                n.style('background-rotation', pumpAngle + 'deg');
+                n.style('border-width', bw);
             });
         });
         requestAnimationFrame(animatePumps);
     }
     animatePumps();
 
-    // ── 3. Valve pulse (border-width oscillation) ─────────────────────────────
-    let pulsePhase = 0;
+    // ── 3. Valve ON: border-width pulse ───────────────────────────────────────
+    let valvePhase = 0;
     function animateValves() {
         if (!running) return;
-        pulsePhase = (pulsePhase + 0.06) % (Math.PI * 2);
-        const glow = 3 + Math.sin(pulsePhase) * 2;   // oscillates 1 → 5 px
+        valvePhase = (valvePhase + 0.05) % (Math.PI * 2);
+        const bw = 2.5 + Math.sin(valvePhase) * 1.5;  // oscillates 1 → 4 px
         cy.batch(() => {
             cy.nodes('[type="valve"][state="ON"]').forEach(n => {
-                n.style('border-width', glow);
+                n.style('border-width', bw);
             });
         });
         requestAnimationFrame(animateValves);
