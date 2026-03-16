@@ -1,11 +1,11 @@
 {
   "nodes": [
-    { "data": { "id": "V1", "type": "valve", "state": "OFF", "label": "V1\nInlet"   }, "position": { "x": 100, "y": 150 } },
-    { "data": { "id": "V2", "type": "valve", "state": "OFF", "label": "V2\nBooster" }, "position": { "x": 400, "y": 150 } },
-    { "data": { "id": "T1", "type": "zone",  "state": "ON",  "label": "Tank A"      }, "position": { "x": 250, "y": 350 } }
+    { "data": { "id": "V1",     "type": "valve", "state": "OFF", "label": "V1\nInlet"    }, "position": { "x": 100, "y": 150 } },
+    { "data": { "id": "V2",     "type": "valve", "state": "OFF", "label": "V2\nBooster"  }, "position": { "x": 400, "y": 150 } },
+    { "data": { "id": "Zone_A", "type": "zone",  "state": "ON",  "label": "Zone A"       }, "position": { "x": 250, "y": 350 } }
   ],
   "edges": [
-    { "data": { "id": "P1", "source": "V1", "target": "T1", "label": "Main",   "flow": "" } },
-    { "data": { "id": "P2", "source": "V2", "target": "T1", "label": "Bypass", "flow": "" } }
+    { "data": { "id": "P1", "source": "V1",     "target": "Zone_A", "label": "Main",   "flow": "" } },
+    { "data": { "id": "P2", "source": "V2",     "target": "Zone_A", "label": "Bypass", "flow": "" } }
   ]
 }
