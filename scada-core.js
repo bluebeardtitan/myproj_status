@@ -97,8 +97,8 @@ selector: 'node',
 style: {
     'label': 'data(label)',
 
-    'width': 200,
-    'height': 200,
+    'width': 20,
+    'height': 20,
 
     'background-opacity': 0,
     'background-image': ICONS.valveOff,
@@ -144,8 +144,8 @@ style: { 'background-image': ICONS.valveOff }
 {
 selector: 'node[type="zone"]',
 style: {
-    'width': 70,
-    'height': 70
+    'width': 20,
+    'height': 20
 }
 },
 
@@ -163,8 +163,8 @@ style: { 'background-image': ICONS.zoneOff }
 {
 selector: 'node[type="pump"]',
 style: {
-    'width': 65,
-    'height': 65
+    'width': 20,
+    'height': 20
 }
 },
 
