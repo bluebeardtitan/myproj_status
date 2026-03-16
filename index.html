@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
     <title>Water System SCADA</title>
-
-    <!-- 1. Cytoscape first -->
     <script src="libs/cytoscape.min.js"></script>
-    <!-- 2. Your core last -->
     <script src="scada-core.js"></script>
-
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background: #f0f4f8; }
@@ -55,6 +51,7 @@
         }
         #cy { width: 100%; height: 100%; display: block; }
 
+        /* Loading overlay */
         #loading {
             position: absolute;
             inset: 0;
@@ -88,7 +85,7 @@
 <body>
 
 <div class="header">
-    <h1>🌊 Water SCADA</h1>
+    <h1>🌊 My Project SCADA</h1>
     <select id="zone-select"><option>Loading zones...</option></select>
     <div id="sync-status">Initializing...</div>
 </div>
@@ -101,35 +98,25 @@
         <h4>Legend</h4>
         <div class="legend-item"><div class="dot" style="background:#2ecc71"></div> Valve OPEN</div>
         <div class="legend-item"><div class="dot" style="background:#e74c3c"></div> Valve CLOSED</div>
-        <div class="legend-item"><div class="dot-square" style="background:#8e44ad"></div> Pump ON</div>
-        <div class="legend-item"><div class="dot-square" style="background:#95a5a6"></div> Pump OFF</div>
         <div class="legend-item"><div class="dot-square" style="background:#3498db"></div> Zone ACTIVE</div>
-        <div class="legend-item"><div class="dot-square" style="background:#bdc3c7"></div> Zone INACTIVE</div>
+        <div class="legend-item"><div class="dot-square" style="background:#95a5a6"></div> Zone INACTIVE</div>
         <div class="legend-item">
             <div style="width:28px;height:4px;background:#2ecc71;border-radius:2px;flex-shrink:0"></div>
             Active Flow
-        </div>
-        <div class="legend-item">
-            <div style="width:28px;height:4px;background:#3498db;border-radius:2px;flex-shrink:0"></div>
-            Pipe
-        </div>
-        <div class="legend-item">
-            <div style="width:28px;height:4px;background:#e74c3c;border-radius:2px;border-top:2px dashed #e74c3c;flex-shrink:0"></div>
-            Fault
         </div>
     </div>
 </div>
 
 <script>
     // ─── CONFIG ───────────────────────────────────────────────────────────────
-    const GITHUB_USERNAME     = 'bluebeardtitan';
-    const GIST_ID             = 'a6ff5a8f656b7736aa2ac6b3eef9907f';
+    const GITHUB_USERNAME    = 'bluebeardtitan';
+    const GIST_ID            = 'a6ff5a8f656b7736aa2ac6b3eef9907f';
     const REFRESH_INTERVAL_MS = 20000;
     // ─────────────────────────────────────────────────────────────────────────
 
-    let cy           = null;
+    let cy = null;
     let refreshTimer = null;
-    let currentZone  = null;
+    let currentZone = null;
 
     // ─── LOAD MANIFEST → POPULATE DROPDOWN ───────────────────────────────────
     async function loadManifest() {
@@ -142,11 +129,12 @@
             select.innerHTML = '<option value="">— Select a zone —</option>';
             zones.forEach(z => {
                 const opt = document.createElement('option');
-                opt.value       = JSON.stringify(z);
+                opt.value    = JSON.stringify(z);  // store full zone object
                 opt.textContent = z.name;
                 select.appendChild(opt);
             });
 
+            // Auto-load first zone
             if (zones.length > 0) {
                 select.selectedIndex = 1;
                 loadZone(zones[0]);
@@ -162,6 +150,7 @@
         if (currentZone && currentZone.id === zone.id) return;
         currentZone = zone;
 
+        // Stop existing refresh loop
         if (refreshTimer) clearInterval(refreshTimer);
 
         showLoading(true);
@@ -175,6 +164,7 @@
             initCytoscape(diagram);
             showLoading(false);
 
+            // Start live refresh for this zone
             await refreshStatus(zone);
             refreshTimer = setInterval(() => refreshStatus(zone), REFRESH_INTERVAL_MS);
 
@@ -187,11 +177,11 @@
 
     // ─── INIT / REINIT CYTOSCAPE ──────────────────────────────────────────────
     function initCytoscape(diagram) {
-        if (cy) cy.destroy();
+        if (cy) cy.destroy();   // tear down previous instance
 
         cy = cytoscape({
             container: document.getElementById('cy'),
-            style: CY_STYLE,           // from scada-core.js
+            style: CY_STYLE,
             elements: {
                 nodes: diagram.nodes,
                 edges: diagram.edges
@@ -205,8 +195,6 @@
             const n = evt.target;
             console.log(`[TAP] id=${n.id()} type=${n.data('type')} state=${n.data('state')}`);
         });
-
-        initNodeLabels(cy);            // from scada-core.js — renders SVG icons as real DOM
     }
 
     // ─── FETCH LIVE STATUS FROM GIST ─────────────────────────────────────────
@@ -221,7 +209,7 @@
             const data = await res.json();
             if (data.error) throw new Error(data.error);
 
-            const updated = applyStatus(cy, data);  // from scada-core.js
+            const updated = applyStatus(cy, data);
             setStatus(`✓ Synced ${new Date().toLocaleTimeString()} (${updated} elements)`, '#27ae60');
         } catch (err) {
             setStatus('⚠ ' + err.message, '#c0392b');
@@ -232,7 +220,7 @@
     // ─── UI HELPERS ───────────────────────────────────────────────────────────
     function setStatus(msg, bg) {
         const el = document.getElementById('sync-status');
-        el.innerText       = msg;
+        el.innerText = msg;
         el.style.background = bg;
     }
 

@@ -1,65 +1,135 @@
-// ─── SVG ICONS — simple originals that work ───────────────────────────────────
+// ─── SVG ICONS ────────────────────────────────────────────────────────────────
+// All SVGs use viewBox="0 0 100 100", content centered at 50,50
+// This guarantees Cytoscape centres them correctly with background-fit:contain
 
-const svgValveOn  = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ecc71"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
-const svgValveOff = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e74c3c"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>');
+const makeSVG = (s) => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
 
-const svgZoneOn   = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233498db"><path d="M3 13h2v7H3v-7zm4-4h2v11H7V9zm4-4h2v15h-2V5zm4 2h2v13h-2V7zm4-4h2v17h-2V3z"/></svg>');
-const svgZoneOff  = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2395a5a6"><path d="M3 13h2v7H3v-7zm4-4h2v11H7V9zm4-4h2v15h-2V5zm4 2h2v13h-2V7zm4-4h2v17h-2V3z"/></svg>');
+const ICONS = {
 
-const svgPumpOn   = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238e44ad"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>');
-const svgPumpOff  = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2395a5a6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>');
+    valveOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <polygon points="50,10 15,85 25,92 50,78 75,92 85,85"
+            fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
+        <rect x="45" y="8" width="10" height="28" rx="3"
+            fill="#ffffff" opacity="0.5"/>
+        <circle cx="50" cy="50" r="8"
+            fill="#ffffff" opacity="0.35"/>
+    </svg>`),
+
+    valveOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <polygon points="50,10 15,85 25,92 50,78 75,92 85,85"
+            fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+        <rect x="45" y="8" width="10" height="28" rx="3"
+            fill="#ffffff" opacity="0.4"/>
+        <line x1="30" y1="32" x2="68" y2="68"
+            stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    </svg>`),
+
+    zoneOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect x="10" y="35" width="80" height="54" rx="7"
+            fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+        <rect x="34" y="14" width="32" height="26" rx="5"
+            fill="#2980b9" stroke="#1a6fa3" stroke-width="2"/>
+        <rect x="16" y="52" width="68" height="7" rx="3"
+            fill="#ffffff" opacity="0.22"/>
+        <rect x="16" y="42" width="30" height="5" rx="2"
+            fill="#ffffff" opacity="0.28"/>
+        <circle cx="76" cy="42" r="7"
+            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
+
+    zoneOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect x="10" y="35" width="80" height="54" rx="7"
+            fill="#bdc3c7" stroke="#95a5a6" stroke-width="2"/>
+        <rect x="34" y="14" width="32" height="26" rx="5"
+            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+        <rect x="16" y="52" width="68" height="7" rx="3"
+            fill="#ffffff" opacity="0.15"/>
+        <circle cx="76" cy="42" r="7"
+            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
+
+    pumpOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="38"
+            fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.45" transform="rotate(0 50 50)"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.45" transform="rotate(60 50 50)"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.45" transform="rotate(120 50 50)"/>
+        <circle cx="50" cy="50" r="10"
+            fill="#6c3483"/>
+        <circle cx="72" cy="28" r="7"
+            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
+
+    pumpOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="38"
+            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.25" transform="rotate(0 50 50)"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.25" transform="rotate(60 50 50)"/>
+        <ellipse cx="50" cy="28" rx="7" ry="14"
+            fill="#ffffff" opacity="0.25" transform="rotate(120 50 50)"/>
+        <circle cx="50" cy="50" r="10"
+            fill="#7f8c8d"/>
+        <circle cx="72" cy="28" r="7"
+            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
+    </svg>`)
+};
 
 // ─── CYTOSCAPE STYLE ──────────────────────────────────────────────────────────
 const CY_STYLE = [
     {
         selector: 'node',
         style: {
-            'label':              'data(label)',
-            'width':              50,
-            'height':             50,
-            'background-opacity': 0,
-            'background-image':   svgValveOff,
-            'background-fit':     'contain',
-            'font-size':          '10px',
-            'font-weight':        'bold',
-            'text-wrap':          'wrap',
-            'text-max-width':     '100px',
-            'text-valign':        'bottom',
-            'text-halign':        'center',
-            'text-margin-y':      5,
-            'color':              '#2c3e50',
-            'border-width':       0
+            'label':                'data(label)',
+            'width':                60,
+            'height':               60,
+            'background-opacity':   0,
+            'background-image':     ICONS.valveOff,
+            'background-fit':       'contain',      // ← only this, no offset tricks
+            'background-clip':      'none',
+            'font-size':            '11px',
+            'font-weight':          'bold',
+            'text-wrap':            'wrap',
+            'text-max-width':       '120px',
+            'text-valign':          'bottom',
+            'text-margin-y':        10,
+            'color':                '#2c3e50',
+            'border-width':         0
         }
     },
 
-    // ── Valve ─────────────────────────────────────────────────────────────────
+    // ── Valves ──────────────────────────────────────────────────────────────
     { selector: 'node[type="valve"][state="ON"]',
-      style: { 'background-image': svgValveOn } },
+      style: { 'background-image': ICONS.valveOn } },
 
     { selector: 'node[type="valve"][state="OFF"]',
-      style: { 'background-image': svgValveOff } },
+      style: { 'background-image': ICONS.valveOff } },
 
-    // ── Zone / Tank ───────────────────────────────────────────────────────────
+    // ── Zones / Tanks ────────────────────────────────────────────────────────
     { selector: 'node[type="zone"]',
-      style: { 'width': 60, 'height': 60 } },
+      style: { 'width': 70, 'height': 70 } },
 
     { selector: 'node[type="zone"][state="ON"]',
-      style: { 'background-image': svgZoneOn } },
+      style: { 'background-image': ICONS.zoneOn } },
 
     { selector: 'node[type="zone"][state="OFF"]',
-      style: { 'background-image': svgZoneOff } },
+      style: { 'background-image': ICONS.zoneOff } },
 
-    // ── Pump ──────────────────────────────────────────────────────────────────
+    // ── Pumps ────────────────────────────────────────────────────────────────
     { selector: 'node[type="pump"]',
-      style: { 'width': 55, 'height': 55 } },
+      style: { 'width': 65, 'height': 65 } },
 
     { selector: 'node[type="pump"][state="ON"]',
-      style: { 'background-image': svgPumpOn } },
+      style: { 'background-image': ICONS.pumpOn } },
 
     { selector: 'node[type="pump"][state="OFF"]',
-      style: { 'background-image': svgPumpOff } },
+      style: { 'background-image': ICONS.pumpOff } },
 
-    // ── Edges / Pipes ─────────────────────────────────────────────────────────
+    // ── Edges / Pipes ────────────────────────────────────────────────────────
     {
         selector: 'edge',
         style: {
@@ -82,24 +152,21 @@ const CY_STYLE = [
     {
         selector: 'edge[flow="active"]',
         style: {
-            'line-color':         '#2ecc71',
-            'target-arrow-color': '#2ecc71',
-            'width':              5
+            'line-color':           '#2ecc71',
+            'target-arrow-color':   '#2ecc71',
+            'width':                5
         }
     },
     {
         selector: 'edge[flow="fault"]',
         style: {
-            'line-color':         '#e74c3c',
-            'target-arrow-color': '#e74c3c',
-            'width':              4,
-            'line-style':         'dashed'
+            'line-color':           '#e74c3c',
+            'target-arrow-color':   '#e74c3c',
+            'width':                4,
+            'line-style':           'dashed'
         }
     }
 ];
-
-// ─── NO-OP — keeps index.html call intact ────────────────────────────────────
-function initNodeLabels(cy) { /* not needed */ }
 
 // ─── APPLY STATUS UPDATE FROM GIST ───────────────────────────────────────────
 function applyStatus(cy, data) {
