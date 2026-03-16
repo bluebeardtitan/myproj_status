@@ -80,6 +80,13 @@
         .legend-item { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
         .dot        { width: 14px; height: 14px; border-radius: 50%;  flex-shrink: 0; }
         .dot-square { width: 14px; height: 14px; border-radius: 3px;  flex-shrink: 0; }
+
+        /* Fault blink legend pulse */
+        @keyframes legendFaultBlink {
+            0%, 100% { background: #e74c3c; }
+            50%       { background: #ff8c00; }
+        }
+        .dot-fault { animation: legendFaultBlink 1s infinite; }
     </style>
 </head>
 <body>
@@ -104,19 +111,24 @@
             <div style="width:28px;height:4px;background:#2ecc71;border-radius:2px;flex-shrink:0"></div>
             Active Flow
         </div>
+        <div class="legend-item">
+            <div class="dot dot-fault" style="width:14px;height:4px;border-radius:2px;flex-shrink:0"></div>
+            Fault
+        </div>
     </div>
 </div>
 
 <script>
     // ─── CONFIG ───────────────────────────────────────────────────────────────
-    const GITHUB_USERNAME    = 'bluebeardtitan';
-    const GIST_ID            = 'a6ff5a8f656b7736aa2ac6b3eef9907f';
+    const GITHUB_USERNAME     = 'bluebeardtitan';
+    const GIST_ID             = 'a6ff5a8f656b7736aa2ac6b3eef9907f';
     const REFRESH_INTERVAL_MS = 20000;
     // ─────────────────────────────────────────────────────────────────────────
 
-    let cy = null;
-    let refreshTimer = null;
-    let currentZone = null;
+    let cy            = null;
+    let refreshTimer  = null;
+    let currentZone   = null;
+    let stopAnims     = null;   // teardown handle returned by startAnimations()
 
     // ─── LOAD MANIFEST → POPULATE DROPDOWN ───────────────────────────────────
     async function loadManifest() {
@@ -129,7 +141,7 @@
             select.innerHTML = '<option value="">— Select a zone —</option>';
             zones.forEach(z => {
                 const opt = document.createElement('option');
-                opt.value    = JSON.stringify(z);  // store full zone object
+                opt.value       = JSON.stringify(z);   // store full zone object
                 opt.textContent = z.name;
                 select.appendChild(opt);
             });
@@ -150,8 +162,9 @@
         if (currentZone && currentZone.id === zone.id) return;
         currentZone = zone;
 
-        // Stop existing refresh loop
+        // Stop existing refresh + animation loops
         if (refreshTimer) clearInterval(refreshTimer);
+        if (stopAnims)    stopAnims();
 
         showLoading(true);
         setStatus('Loading ' + zone.name + '...', '#34495e');
@@ -162,6 +175,10 @@
             const diagram = await res.json();
 
             initCytoscape(diagram);
+
+            // ── Start all visual animations ────────────────────────────────
+            stopAnims = startAnimations(cy);
+
             showLoading(false);
 
             // Start live refresh for this zone
