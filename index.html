@@ -78,15 +78,36 @@
         }
         .legend h4 { margin-bottom: 8px; color: #333; font-size: 0.85rem; }
         .legend-item { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-        .dot        { width: 14px; height: 14px; border-radius: 50%;  flex-shrink: 0; }
-        .dot-square { width: 14px; height: 14px; border-radius: 3px;  flex-shrink: 0; }
+
+        /* Shape swatches — mirror Cytoscape native shapes exactly */
+        .lg-diamond {
+            width: 14px; height: 14px; flex-shrink: 0;
+            transform: rotate(45deg);
+            border-radius: 2px;
+        }
+        .lg-circle {
+            width: 14px; height: 14px; flex-shrink: 0;
+            border-radius: 50%;
+        }
+        .lg-roundrect {
+            width: 18px; height: 13px; flex-shrink: 0;
+            border-radius: 3px;
+        }
+        .lg-pipe {
+            width: 26px; height: 4px; flex-shrink: 0;
+            border-radius: 2px;
+        }
+        .lg-fault {
+            width: 26px; height: 4px; flex-shrink: 0;
+            border-radius: 2px;
+        }
 
         /* Fault blink legend pulse */
         @keyframes legendFaultBlink {
             0%, 100% { background: #e74c3c; }
             50%       { background: #ff8c00; }
         }
-        .dot-fault { animation: legendFaultBlink 1s infinite; }
+        .lg-fault { animation: legendFaultBlink 1s infinite; }
     </style>
 </head>
 <body>
@@ -103,16 +124,40 @@
 
     <div class="legend">
         <h4>Legend</h4>
-        <div class="legend-item"><div class="dot" style="background:#2ecc71"></div> Valve OPEN</div>
-        <div class="legend-item"><div class="dot" style="background:#e74c3c"></div> Valve CLOSED</div>
-        <div class="legend-item"><div class="dot-square" style="background:#3498db"></div> Zone ACTIVE</div>
-        <div class="legend-item"><div class="dot-square" style="background:#95a5a6"></div> Zone INACTIVE</div>
+
         <div class="legend-item">
-            <div style="width:28px;height:4px;background:#2ecc71;border-radius:2px;flex-shrink:0"></div>
+            <div class="lg-diamond" style="background:#2ecc71; border: 2px solid #27ae60;"></div>
+            Valve OPEN
+        </div>
+        <div class="legend-item">
+            <div class="lg-diamond" style="background:#e74c3c; border: 2px solid #c0392b;"></div>
+            Valve CLOSED
+        </div>
+
+        <div class="legend-item">
+            <div class="lg-circle" style="background:#8e44ad; border: 3px solid #2ecc71;"></div>
+            Pump RUNNING
+        </div>
+        <div class="legend-item">
+            <div class="lg-circle" style="background:#95a5a6; border: 2px solid #7f8c8d;"></div>
+            Pump STOPPED
+        </div>
+
+        <div class="legend-item">
+            <div class="lg-roundrect" style="background:#3498db; border: 2px solid #2980b9;"></div>
+            Zone ACTIVE
+        </div>
+        <div class="legend-item">
+            <div class="lg-roundrect" style="background:#bdc3c7; border: 2px solid #95a5a6;"></div>
+            Zone INACTIVE
+        </div>
+
+        <div class="legend-item">
+            <div class="lg-pipe" style="background:#2ecc71;"></div>
             Active Flow
         </div>
         <div class="legend-item">
-            <div class="dot dot-fault" style="width:14px;height:4px;border-radius:2px;flex-shrink:0"></div>
+            <div class="lg-fault"></div>
             Fault
         </div>
     </div>
