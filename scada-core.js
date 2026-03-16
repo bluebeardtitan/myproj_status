@@ -3,104 +3,106 @@
 
 const makeSVG = (s) => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
 
-// ─── SVG ICONS ────────────────────────────────────────────────────────────────
-// Centered geometry for Cytoscape background rendering
-
-const makeSVG = (s) => 'data:image/svg+xml;utf8,' + encodeURIComponent(s);
-
 const ICONS = {
 
-        valveOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,4)">
-        <polygon points="50,10 15,85 25,92 50,78 75,92 85,85"
-        fill="#2ecc71" stroke="#27ae60" stroke-width="2"/>
-        <rect x="45" y="8" width="10" height="28" rx="3"
-        fill="#ffffff" opacity="0.5"/>
-        <circle cx="50" cy="50" r="8"
-        fill="#ffffff" opacity="0.35"/>
-        </g>
-        </svg>`),
+    // Butterfly / bowtie valve — two wings symmetric about (50,50).
+    // Wing bounding box: x=[8,92] centre=50, y=[15,85] centre=50. ✓
+    // Actuator stem (narrow) extends to y=1 but doesn't shift visual mass.
+    valveOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
+        <polygon points="8,15 8,85 50,50"
+            fill="#2ecc71" stroke="#27ae60" stroke-width="2" stroke-linejoin="round"/>
+        <polygon points="92,15 92,85 50,50"
+            fill="#2ecc71" stroke="#27ae60" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="46" y="1" width="8" height="18" rx="3"
+            fill="#ffffff" opacity="0.55"/>
+        <circle cx="50" cy="50" r="6"
+            fill="#27ae60" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
 
-        valveOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,4)">
-        <polygon points="50,10 15,85 25,92 50,78 75,92 85,85"
-        fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
-        <rect x="45" y="8" width="10" height="28" rx="3"
-        fill="#ffffff" opacity="0.4"/>
-        <line x1="30" y1="32" x2="68" y2="68"
-        stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-        </g>
-        </svg>`),
+    valveOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
+        <polygon points="8,15 8,85 50,50"
+            fill="#e74c3c" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+        <polygon points="92,15 92,85 50,50"
+            fill="#e74c3c" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+        <rect x="46" y="1" width="8" height="18" rx="3"
+            fill="#ffffff" opacity="0.45"/>
+        <circle cx="50" cy="50" r="6"
+            fill="#c0392b" stroke="#ffffff" stroke-width="2"/>
+        <line x1="30" y1="30" x2="70" y2="70"
+            stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+        <line x1="70" y1="30" x2="30" y2="70"
+            stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+    </svg>`),
 
-        zoneOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,-4)">
-        <rect x="10" y="35" width="80" height="54" rx="7"
-        fill="#3498db" stroke="#2980b9" stroke-width="2"/>
-        <rect x="34" y="14" width="32" height="26" rx="5"
-        fill="#2980b9" stroke="#1a6fa3" stroke-width="2"/>
-        <rect x="16" y="52" width="68" height="7" rx="3"
-        fill="#ffffff" opacity="0.22"/>
-        <rect x="16" y="42" width="30" height="5" rx="2"
-        fill="#ffffff" opacity="0.28"/>
-        <circle cx="76" cy="42" r="7"
-        fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
-        </g>
-        </svg>`),
+    // Building — body y=[30,90] + roof y=[8,34].
+    // Bounding box: x=[10,90] centre=50 ✓,  y=[8,90] centre=49 ✓
+    zoneOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
+        <rect x="10" y="30" width="80" height="60" rx="7"
+            fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+        <rect x="32" y="8" width="36" height="26" rx="5"
+            fill="#2980b9" stroke="#1a6fa3" stroke-width="2"/>
+        <rect x="16" y="50" width="68" height="7" rx="3"
+            fill="#ffffff" opacity="0.22"/>
+        <rect x="16" y="39" width="28" height="5" rx="2"
+            fill="#ffffff" opacity="0.28"/>
+        <circle cx="76" cy="39" r="7"
+            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
 
-        zoneOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,-4)">
-        <rect x="10" y="35" width="80" height="54" rx="7"
-        fill="#bdc3c7" stroke="#95a5a6" stroke-width="2"/>
-        <rect x="34" y="14" width="32" height="26" rx="5"
-        fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
-        <rect x="16" y="52" width="68" height="7" rx="3"
-        fill="#ffffff" opacity="0.15"/>
-        <circle cx="76" cy="42" r="7"
-        fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
-        </g>
-        </svg>`),
+    zoneOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
+        <rect x="10" y="30" width="80" height="60" rx="7"
+            fill="#bdc3c7" stroke="#95a5a6" stroke-width="2"/>
+        <rect x="32" y="8" width="36" height="26" rx="5"
+            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+        <rect x="16" y="50" width="68" height="7" rx="3"
+            fill="#ffffff" opacity="0.15"/>
+        <circle cx="76" cy="39" r="7"
+            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
 
-        pumpOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,0)">
+    // Pump — main circle already centred at (50,50). No geometry changes.
+    pumpOn: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
         <circle cx="50" cy="50" r="38"
-        fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
+            fill="#8e44ad" stroke="#6c3483" stroke-width="2"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.45" transform="rotate(0 50 50)"/>
+            fill="#ffffff" opacity="0.45" transform="rotate(0 50 50)"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.45" transform="rotate(60 50 50)"/>
+            fill="#ffffff" opacity="0.45" transform="rotate(60 50 50)"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.45" transform="rotate(120 50 50)"/>
+            fill="#ffffff" opacity="0.45" transform="rotate(120 50 50)"/>
         <circle cx="50" cy="50" r="10"
-        fill="#6c3483"/>
+            fill="#6c3483"/>
         <circle cx="72" cy="28" r="7"
-        fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
-        </g>
-        </svg>`),
+            fill="#2ecc71" stroke="#ffffff" stroke-width="2"/>
+    </svg>`),
 
-        pumpOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
-        viewBox="-10 -10 120 120" preserveAspectRatio="xMidYMid meet">
-        <g transform="translate(0,0)">
+    pumpOff: makeSVG(`<svg xmlns="http://www.w3.org/2000/svg"
+        viewBox="-10 -10 120 120"
+        preserveAspectRatio="xMidYMid meet">
         <circle cx="50" cy="50" r="38"
-        fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+            fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.25" transform="rotate(0 50 50)"/>
+            fill="#ffffff" opacity="0.25" transform="rotate(0 50 50)"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.25" transform="rotate(60 50 50)"/>
+            fill="#ffffff" opacity="0.25" transform="rotate(60 50 50)"/>
         <ellipse cx="50" cy="28" rx="7" ry="14"
-        fill="#ffffff" opacity="0.25" transform="rotate(120 50 50)"/>
+            fill="#ffffff" opacity="0.25" transform="rotate(120 50 50)"/>
         <circle cx="50" cy="50" r="10"
-        fill="#7f8c8d"/>
+            fill="#7f8c8d"/>
         <circle cx="72" cy="28" r="7"
-        fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
-        </g>
-        </svg>`)
-
-    };
+            fill="#e74c3c" stroke="#ffffff" stroke-width="2"/>
+    </svg>`)
+};
 
 // ─── CYTOSCAPE STYLE ──────────────────────────────────────────────────────────
 const CY_STYLE = [
