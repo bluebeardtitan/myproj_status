@@ -161,8 +161,8 @@ const CY_STYLE = [
 {
     selector: 'edge[flow=""]',
     style: {
-        'line-color': '#bdc3c7',
-        'target-arrow-color': '#bdc3c7',
+        'line-color': '#a9b0b8',
+        'target-arrow-color': '#a9b0b8',
         'line-style': 'solid',
         'width': 3
     }
@@ -259,6 +259,7 @@ function propagateFlow(cy) {
 
     // ── BFS from every ON pump ────────────────────────────────────────────────
     const reachableEdges = new Set();
+    const reachableNodes = new Set();
     const visitedNodes   = new Set();
 
     const queue = cy.nodes('[type="pump"][state="ON"]').toArray();
@@ -270,6 +271,7 @@ function propagateFlow(cy) {
 
         if (visitedNodes.has(nid)) continue;
         visitedNodes.add(nid);
+        reachableNodes.add(nid);
 
         // Closed valve: water reaches the valve body but does NOT pass through.
         // Mark incoming edge reachable (water is there), stop outgoing traversal.
@@ -295,7 +297,7 @@ function propagateFlow(cy) {
                 }
             });
 
-            // Zones
+            // Zones — only ON if reachable via active edge
             cy.nodes('[type="zone"]').forEach(zone => {
 
                 const incoming = zone.incomers('edge');
