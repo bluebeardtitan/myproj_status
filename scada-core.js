@@ -287,6 +287,12 @@ function propagateFlow(cy) {
     // ── Update zone states based on reachable pipes ─────────────────────────
     cy.batch(() => {
         cy.nodes('[type="zone"]').forEach(zone => {
+            const currentState = zone.data('state');
+            
+            // If zone is already manually OFF, keep it OFF
+            if (currentState === 'OFF') return;
+            
+            // Otherwise, set based on reachability
             const incoming = zone.incomers('edge');
             let reachable = false;
 
