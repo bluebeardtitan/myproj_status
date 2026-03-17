@@ -111,7 +111,10 @@ const CY_STYLE = [
     style: {
         'shape': 'round-rectangle',
         'width': 56,
-        'height': 44
+        'height': 44,
+        'background-color': COLOR.zoneOff,
+        'border-color': COLOR.zoneOffBorder,
+        'border-width': 2
     }
 },
 {
@@ -257,9 +260,8 @@ function propagateFlow(cy) {
     const hasPumps = cy.nodes('[type="pump"]').length > 0;
     if (!hasPumps) return;
 
-    // ── BFS from every ON pump ────────────────────────────────────────────────
+    // ── First pass: determine which zones are reachable ──────────────────────
     const reachableEdges = new Set();
-    const reachableNodes = new Set();
     const visitedNodes   = new Set();
 
     const queue = cy.nodes('[type="pump"][state="ON"]').toArray();
@@ -271,7 +273,6 @@ function propagateFlow(cy) {
 
         if (visitedNodes.has(nid)) continue;
         visitedNodes.add(nid);
-        reachableNodes.add(nid);
 
         // Closed valve: water reaches the valve body but does NOT pass through.
         // Mark incoming edge reachable (water is there), stop outgoing traversal.
@@ -283,36 +284,39 @@ function propagateFlow(cy) {
         });
     }
 
-        // ── Write derived flow state back to every edge and zones ─────────────────
-        cy.batch(() => {
+    // ── Update zone states based on reachable pipes ─────────────────────────
+    cy.batch(() => {
+        cy.nodes('[type="zone"]').forEach(zone => {
+            const incoming = zone.incomers('edge');
+            let reachable = false;
 
-            // Pipes
-            cy.edges().forEach(edge => {
-                const current = edge.data('flow');
-
-                if (reachableEdges.has(edge.id())) {
-                    if (current !== 'fault') edge.data('flow', 'active');
-                } else {
-                    if (current !== 'fault') edge.data('flow', '');
-                }
+            incoming.forEach(edge => {
+                if (reachableEdges.has(edge.id()))
+                    reachable = true;
             });
 
-            // Zones — only ON if reachable via active edge
-            cy.nodes('[type="zone"]').forEach(zone => {
-
-                const incoming = zone.incomers('edge');
-                let reachable = false;
-
-                incoming.forEach(edge => {
-                    if (reachableEdges.has(edge.id()))
-                        reachable = true;
-                });
-
-                zone.data('state', reachable ? 'ON' : 'OFF');
-            });
-
+            zone.data('state', reachable ? 'ON' : 'OFF');
         });
-    }
+    });
+
+    // ── Second pass: block pipes through inactive zones ───────────────────────
+    // An edge cannot carry flow if it terminates in an inactive zone
+    cy.batch(() => {
+        cy.edges().forEach(edge => {
+            const target = edge.target();
+            const isZone = target.data('type') === 'zone';
+            const zoneIsInactive = isZone && target.data('state') === 'OFF';
+
+            const current = edge.data('flow');
+
+            if (reachableEdges.has(edge.id()) && !zoneIsInactive) {
+                if (current !== 'fault') edge.data('flow', 'active');
+            } else {
+                if (current !== 'fault') edge.data('flow', '');
+            }
+        });
+    });
+}
 
 // ─── ANIMATIONS ──────────────────────────────────────────────────────────────
 // Call startAnimations(cy) once after Cytoscape is initialised.
