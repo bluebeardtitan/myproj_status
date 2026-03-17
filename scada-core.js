@@ -305,17 +305,13 @@ function propagateFlow(cy) {
         });
     });
 
-    // ── Second pass: block pipes through inactive zones ───────────────────────
-    // An edge cannot carry flow if it terminates in an inactive zone
+    // ── Second pass: update pipe flow states ───────────────────────────────
+    // Pipes carry flow only if they are reachable from a pump (faults excluded)
     cy.batch(() => {
         cy.edges().forEach(edge => {
-            const target = edge.target();
-            const isZone = target.data('type') === 'zone';
-            const zoneIsInactive = isZone && target.data('state') === 'OFF';
-
             const current = edge.data('flow');
 
-            if (reachableEdges.has(edge.id()) && !zoneIsInactive) {
+            if (reachableEdges.has(edge.id())) {
                 if (current !== 'fault') edge.data('flow', 'active');
             } else {
                 if (current !== 'fault') edge.data('flow', '');
