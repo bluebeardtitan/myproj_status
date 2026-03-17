@@ -157,6 +157,17 @@ const CY_STYLE = [
     }
 },
 
+// Inactive pipe
+{
+    selector: 'edge[flow=""]',
+    style: {
+        'line-color': '#bdc3c7',
+        'target-arrow-color': '#bdc3c7',
+        'line-style': 'solid',
+        'width': 3
+    }
+},
+
 // Active flow: dashed green line (offset animated in JS)
 {
     selector: 'edge[flow="active"]',
@@ -270,18 +281,36 @@ function propagateFlow(cy) {
         });
     }
 
-    // ── Write derived flow state back to every edge ───────────────────────────
-    cy.batch(() => {
-        cy.edges().forEach(edge => {
-            const current = edge.data('flow');
-            if (reachableEdges.has(edge.id())) {
-                if (current !== 'fault') edge.data('flow', 'active');
-            } else {
-                if (current !== 'fault') edge.data('flow', '');
-            }
+        // ── Write derived flow state back to every edge and zones ─────────────────
+        cy.batch(() => {
+
+            // Pipes
+            cy.edges().forEach(edge => {
+                const current = edge.data('flow');
+
+                if (reachableEdges.has(edge.id())) {
+                    if (current !== 'fault') edge.data('flow', 'active');
+                } else {
+                    if (current !== 'fault') edge.data('flow', '');
+                }
+            });
+
+            // Zones
+            cy.nodes('[type="zone"]').forEach(zone => {
+
+                const incoming = zone.incomers('edge');
+                let reachable = false;
+
+                incoming.forEach(edge => {
+                    if (reachableEdges.has(edge.id()))
+                        reachable = true;
+                });
+
+                zone.data('state', reachable ? 'ON' : 'OFF');
+            });
+
         });
-    });
-}
+    }
 
 // ─── ANIMATIONS ──────────────────────────────────────────────────────────────
 // Call startAnimations(cy) once after Cytoscape is initialised.
